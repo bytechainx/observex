@@ -12,12 +12,12 @@
 
 ### 新增
 
-- 从 `xhyper.rs` 抽取为独立可发布 crate，移除对内部 crate `kernel` 与 `contracts` 的依赖。
+- 从 `xhyper.rs` 抽取为独立 crate，移除对内部 crate `kernel` 与 `contracts` 的依赖。
 - `TracingInstrumentation` 改为实现共享契约 `instrumentationx::Instrumentation`。
 - `CountingInstrumentation`、`PrefixedInstrumentation`、`ExportingInstrumentation`、
-  `InMemoryExporter` 与 `TelemetryExporter` 首次以独立 crate 形式发布。
+  `InMemoryExporter` 与 `TelemetryExporter` 首次以独立 crate 形式提供。
 - `sanitize_op` / `truncate_op` / `join_op_segments` / `op_depth` / `op_leaf` 等
-  `op` 名治理函数首次独立发布。
+  `op` 名治理函数首次独立提供。
 
 ### 说明
 
