@@ -8,6 +8,13 @@
 
 ## [Unreleased]
 
+### 新增
+
+- 特性 002 三类测试：`tests/tdd_contracts.rs`（10 个公开入口的行为契约与 TDD-PROBE 红绿表）、
+  `tests/sdd_spec.rs`（`docs/标准.md` 五章节 1:1 对照断言）、
+  `tests/aidd_boundary.rs`（6 条对抗 / 边界用例，含多字节截断、容量 0、exporter Err/panic 隔离、
+  并发 shutdown 计数守恒）。
+
 ## [0.1.0] - 2026-09-21
 
 ### 新增
