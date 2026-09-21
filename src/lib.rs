@@ -186,6 +186,15 @@ impl Instrumentation for &CountingInstrumentation {
 }
 
 /// 空 op → `"_"`。
+///
+/// # Examples
+///
+/// ```
+/// use observex::normalize_op;
+///
+/// assert_eq!(normalize_op("db.query"), "db.query");
+/// assert_eq!(normalize_op(""), "_", "空 op 归一到占位符");
+/// ```
 #[must_use]
 pub fn normalize_op(op: &str) -> &str {
     if op.is_empty() {
