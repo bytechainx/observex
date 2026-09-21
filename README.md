@@ -12,8 +12,13 @@
 
 ## 安装
 
-```bash
-cargo add observex instrumentationx
+本 crate **不发布到 crates.io**；它与 `instrumentationx` 之间是 path 依赖，需把两个仓库
+clone 到同级目录后以 path 引入：
+
+```toml
+[dependencies]
+observex = { path = "../observex" }
+instrumentationx = { path = "../instrumentationx" }
 ```
 
 ## 最小可运行示例
@@ -108,7 +113,7 @@ fn main() -> Result<(), observex::ExportError> {
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 cargo test
-# instrumentationx 尚未发布到 crates.io；打包时需要显式指向同级的本地 checkout。
+# instrumentationx 不发布到 crates.io，该覆盖是长期约定；打包时始终显式指向同级的本地 checkout。
 cargo package --no-verify --offline \
   --config 'patch.crates-io.instrumentationx.path="../instrumentationx"'
 ```
@@ -116,11 +121,11 @@ cargo package --no-verify --offline \
 ## 与 instrumentationx 的关系
 
 本 crate 实现 `instrumentationx::Instrumentation`，依赖以 `path` + `version` 声明。
-`instrumentationx` 目前**未发布到 crates.io**，因此：
+`instrumentationx` **不发布到 crates.io**（组织内各 crate 均不发布），因此：
 
 - 本地开发：把两个仓库放在同级目录即可正常构建；
-- `cargo package`：需要上面那条 `--config` 覆盖，或先发布 `instrumentationx`；
-- 若将来 `instrumentationx` 发布，去掉 `path` 覆盖即可，`version` 声明无需改动。
+- 消费方：同样需要两个仓库同级 checkout，并按上面的 `path` 形式引入；
+- `cargo package`：需要上面那条 `--config` 覆盖；该覆盖是长期约定，不随版本演进移除。
 
 ## 许可
 

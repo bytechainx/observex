@@ -7,7 +7,7 @@ description = "可观测性实现：Instrumentation 的 tracing 实现、op 名�
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/bytechainx/observex"
 homepage = "https://github.com/bytechainx/observex"
-documentation = "https://docs.rs/observex"
+documentation = "https://github.com/bytechainx/observex#readme"
 readme = "README.md"
 keywords = ["observability", "tracing", "instrumentation", "metrics", "telemetry"]
 categories = ["development-tools::debugging"]
@@ -49,6 +49,3 @@ panic = "deny"
 unreachable = "deny"
 todo = "deny"
 unimplemented = "deny"
-
-[package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
