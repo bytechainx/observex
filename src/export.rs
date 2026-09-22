@@ -127,6 +127,8 @@ pub struct InMemoryExporter {
 ///
 /// exporter 返回的 [`ExportError`] 与可展开（unwind）的 Rust panic 都不会改变记录调用的返回；
 /// `panic=abort` 不可捕获。inner 始终先执行，失败会进入 [`ExportingInstrumentationStats`]。
+/// `record_*` 转发路径的导出失败无法经 `Result` 传播给调用方，会以 `tracing::warn!` 发出
+/// 结构化日志（指数采样防日志风暴，精确总数见诊断计数器）。
 /// 由于 [`TelemetryExporter`] 是同步接口，违反非阻塞合同的第三方实现仍会阻塞当前线程。
 /// 本类型不提供异步队列、线程隔离或超时。
 pub struct ExportingInstrumentation<I, E> {
@@ -143,6 +145,10 @@ struct ExportDiagnostics {
     unconfirmed_spans: AtomicU64,
     unconfirmed_metrics: AtomicU64,
     counters_saturated: AtomicBool,
+    /// 转发路径（`record_*`）累计导出失败次数，作为日志指数采样的依据。
+    forward_failures: AtomicU64,
+    /// 实际发出的转发失败 warn 日志条数；与 `forward_failures` 的差即被采样抑制数。
+    logged_forward_failures: AtomicU64,
 }
 
 /// [`ExportingInstrumentation`] 的导出失败诊断快照。
@@ -520,6 +526,31 @@ mod tests {
         assert_eq!(stats.failed_export_calls, u64::MAX);
         assert_eq!(stats.unconfirmed_spans, 1);
         assert!(stats.counters_saturated);
+    }
+
+    #[test]
+    fn forward_failure_logs_use_exponential_sampling() {
+        // 日志风暴防护（R-OBS-004）：同一实例 5 次转发失败，仅第 1、2、4 次记录日志；
+        // 诊断计数器与采样计数不受日志采样影响，精确总数始终可查。
+        let instr = ExportingInstrumentation::new(
+            CountingInstrumentation::new(),
+            AcceptsThenErrors::default(),
+        );
+        for _ in 0..5 {
+            instr.record_circuit_open("sampling-op");
+        }
+        assert_eq!(instr.export_stats().failed_export_calls, 5);
+        assert_eq!(
+            instr.diagnostics.forward_failures.load(Ordering::Relaxed),
+            5
+        );
+        assert_eq!(
+            instr
+                .diagnostics
+                .logged_forward_failures
+                .load(Ordering::Relaxed),
+            3
+        );
     }
 
     #[derive(Clone, Copy, PartialEq, Eq)]

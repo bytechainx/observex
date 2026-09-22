@@ -19,6 +19,32 @@ impl ExportDiagnostics {
         }
     }
 
+    /// 把转发路径（`Instrumentation::record_*`）的导出失败记录为结构化 warn 日志。
+    ///
+    /// 该路径的失败不会经 `Result` 传播给调用方（记录调用的返回语义不变），日志是无人值守
+    /// 场景下导出失败唯一的主动可见手段。
+    ///
+    /// 日志风暴防护（组织规范 R-OBS-004）：`record_retry` 随业务重试频率触发，下游故障叠加
+    /// 高 QPS 时 exporter 可能持续失败（如 `BufferFull`），逐条记录会打满日志。因此采用指数
+    /// 采样——第 1 次与第 2^k 次失败记录日志，日志量 O(log n)；精确总数始终可从诊断计数器
+    /// （[`ExportingInstrumentationStats::failed_export_calls`]）与日志的 `forward_failures`
+    /// 字段获得。不依赖时钟，行为完全确定。
+    fn log_forward_failure(&self, operation: &str, signal: &str, op: &str, error: &ExportError) {
+        let failures = self.forward_failures.fetch_add(1, Ordering::Relaxed) + 1;
+        if failures != 1 && !failures.is_power_of_two() {
+            return;
+        }
+        self.logged_forward_failures.fetch_add(1, Ordering::Relaxed);
+        tracing::warn!(
+            error = %error,
+            operation = operation,
+            signal = signal,
+            op = op,
+            forward_failures = failures,
+            "内部遥测导出失败，事件交付状态未确认"
+        );
+    }
+
     fn record_failure(&self, spans: usize, metrics: usize, panicked: bool) {
         let _snapshot = self
             .snapshot_lock
@@ -145,10 +171,19 @@ where
         let metric = MetricEvent {
             name: "retry".into(),
             value: i64::from(attempt),
-            attributes: vec![("op".into(), op)],
+            // clone：`op` 随后还要供失败日志路径引用（低频事件路径，代价可接受）。
+            attributes: vec![("op".into(), op.clone())],
         };
-        let _ = self.export_spans(std::slice::from_ref(&span));
-        let _ = self.export_metrics(std::slice::from_ref(&metric));
+        // 转发失败不经 Result 传播（标准.md §4：Err 被内化且不改业务记录），
+        // 但不得静默：记录限速结构化日志，保证无人值守场景可见。
+        if let Err(error) = self.export_spans(std::slice::from_ref(&span)) {
+            self.diagnostics
+                .log_forward_failure("record_retry", "spans", &op, &error);
+        }
+        if let Err(error) = self.export_metrics(std::slice::from_ref(&metric)) {
+            self.diagnostics
+                .log_forward_failure("record_retry", "metrics", &op, &error);
+        }
     }
 
     fn record_circuit_open(&self, op: &str) {
@@ -159,7 +194,10 @@ where
             start_unix_ms: now_unix_ms(),
             attributes: Vec::new(),
         };
-        let _ = self.export_spans(std::slice::from_ref(&span));
+        if let Err(error) = self.export_spans(std::slice::from_ref(&span)) {
+            self.diagnostics
+                .log_forward_failure("record_circuit_open", "spans", &op, &error);
+        }
     }
 
     fn record_circuit_close(&self, op: &str) {
@@ -170,6 +208,9 @@ where
             start_unix_ms: now_unix_ms(),
             attributes: Vec::new(),
         };
-        let _ = self.export_spans(std::slice::from_ref(&span));
+        if let Err(error) = self.export_spans(std::slice::from_ref(&span)) {
+            self.diagnostics
+                .log_forward_failure("record_circuit_close", "spans", &op, &error);
+        }
     }
 }

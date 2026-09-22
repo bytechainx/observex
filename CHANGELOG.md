@@ -8,6 +8,18 @@
 
 ## [Unreleased]
 
+### 新增
+
+- `ExportingInstrumentation` 的 `record_*` 转发路径在导出失败（exporter 返回 `ExportError`
+  或发生可展开 panic）时，以 `tracing::warn!` 发出结构化日志（`error` / `operation` /
+  `signal` / `op` / `forward_failures` 字段，中文消息）。此前该路径的失败仅进入诊断计数器，
+  日志面完全静默，无人值守场景下导出失败长期不可见（对抗审查 adversarial-20260922-infra6
+  Top10 #4）。日志采用指数采样（第 1 次与第 2^k 次失败记录，日志量 O(log n)）防止下游故障
+  叠加高频重试时的日志风暴（R-OBS-004）；诊断计数器仍逐条累计。记录调用的返回语义、
+  `flush` / `shutdown` 的错误传播与公开 API 均不变。
+- 测试：`tests/export_failure_logging.rs`（捕获 warn 日志文本，断言级别、字段与中文消息）、
+  `src/export.rs` 单测 `forward_failure_logs_use_exponential_sampling`（采样计数 seam）。
+
 ## [0.1.1] - 2026-09-22
 
 ### 新增
