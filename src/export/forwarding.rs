@@ -9,11 +9,15 @@ use super::*;
 impl ExportDiagnostics {
     fn add(&self, counter: &AtomicU64, amount: usize) {
         let amount = u64::try_from(amount).unwrap_or(u64::MAX);
-        let previous = counter
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |current| {
-                Some(current.saturating_add(amount))
-            })
-            .unwrap_or(u64::MAX);
+        let mut previous = counter.load(Ordering::Relaxed);
+        while let Err(observed) = counter.compare_exchange_weak(
+            previous,
+            previous.saturating_add(amount),
+            Ordering::Relaxed,
+            Ordering::Relaxed,
+        ) {
+            previous = observed;
+        }
         if previous.checked_add(amount).is_none() {
             self.counters_saturated.store(true, Ordering::Relaxed);
         }
@@ -211,6 +215,56 @@ where
         if let Err(error) = self.export_spans(std::slice::from_ref(&span)) {
             self.diagnostics
                 .log_forward_failure("record_circuit_close", "spans", &op, &error);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn diagnostic_counter_marks_only_actual_overflow() {
+        for (initial, amount, expected, saturated) in [
+            (0, 0, 0, false),
+            (u64::MAX - 1, 1, u64::MAX, false),
+            (u64::MAX, 0, u64::MAX, false),
+            (u64::MAX, 1, u64::MAX, true),
+        ] {
+            let diagnostics = ExportDiagnostics::default();
+            diagnostics
+                .failed_export_calls
+                .store(initial, Ordering::Relaxed);
+            diagnostics.add(&diagnostics.failed_export_calls, amount);
+            let stats = diagnostics.stats();
+            assert_eq!(stats.failed_export_calls, expected);
+            assert_eq!(stats.counters_saturated, saturated);
+        }
+    }
+
+    #[test]
+    fn concurrent_diagnostic_updates_preserve_counts_and_saturation() {
+        for (initial, expected, saturated) in
+            [(0, 8_000, false), (u64::MAX - 7_999, u64::MAX, true)]
+        {
+            let diagnostics = ExportDiagnostics::default();
+            diagnostics
+                .failed_export_calls
+                .store(initial, Ordering::Relaxed);
+            let start = std::sync::Barrier::new(8);
+            std::thread::scope(|scope| {
+                for _ in 0..8 {
+                    scope.spawn(|| {
+                        start.wait();
+                        for _ in 0..1_000 {
+                            diagnostics.add(&diagnostics.failed_export_calls, 1);
+                        }
+                    });
+                }
+            });
+            let stats = diagnostics.stats();
+            assert_eq!(stats.failed_export_calls, expected);
+            assert_eq!(stats.counters_saturated, saturated);
         }
     }
 }
