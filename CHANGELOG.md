@@ -8,6 +8,12 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-02
+
+### 修正
+
+- 以 CAS 保持诊断计数的饱和与 Relaxed 语义，修复 stable Rust 1.99 的 deprecated 阻断；补充饱和边界与并发累加验证。
+
 ### 新增
 
 - `ExportingInstrumentation` 的 `record_*` 转发路径在导出失败（exporter 返回 `ExportError`
