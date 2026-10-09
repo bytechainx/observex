@@ -2,7 +2,7 @@
 name = "observex"
 version = "0.1.2"
 edition = "2021"
-rust-version = "1.71"
+rust-version = "1.77"
 description = "可观测性实现：Instrumentation 的 tracing 实现、op 名清理与有界进程内遥测 sink"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/bytechainx/observex"
