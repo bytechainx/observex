@@ -70,7 +70,7 @@ cargo package --no-verify --allow-dirty --offline \
 - 不在库代码里裸 `unwrap()`（`[lints.clippy]` 已 `deny` `unwrap_used` / `expect_used` / `panic` /
   `unreachable` / `todo` / `unimplemented`）；`#![forbid(unsafe_code)]`。
 - 所有 `pub` 项必须有中文 `///` 文档（`missing_docs` 已 `deny`）。
-- MSRV `1.71`、edition `2021`。
+- MSRV `1.77`、edition `2021`。
 - 集成测试**必须离线运行**，不触碰真实网络与远端导出。
 
 ## 提交前自检清单

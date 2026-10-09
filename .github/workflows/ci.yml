@@ -74,13 +74,11 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check
-
-        with:
           manifest-path: app/Cargo.toml
 
 
   msrv:
-    name: msrv 1.71
+    name: msrv 1.77
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -90,7 +88,7 @@ jobs:
       - name: 安装 MSRV 工具链
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.71"
+          toolchain: "1.77"
 
       - uses: Swatinem/rust-cache@v2
 
