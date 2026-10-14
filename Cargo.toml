@@ -26,7 +26,7 @@ include = [
 ]
 
 [dependencies]
-instrumentationx = { version = "0.1.0", path = "../instrumentationx" }
+instrumentationx = { version = "0.1.0", git = "https://github.com/bytechainx/instrumentationx.git", rev = "bb23b70bfc2f7b7438ff2bc9635ec31a13d7294d" }
 thiserror = "2"
 tracing = "0.1"
 

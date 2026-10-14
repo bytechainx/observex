@@ -11,6 +11,7 @@ checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 [[package]]
 name = "instrumentationx"
 version = "0.1.0"
+source = "git+https://github.com/bytechainx/instrumentationx.git?rev=bb23b70bfc2f7b7438ff2bc9635ec31a13d7294d#bb23b70bfc2f7b7438ff2bc9635ec31a13d7294d"
 
 [[package]]
 name = "lazy_static"

@@ -8,6 +8,10 @@
 
 ## [Unreleased]
 
+### 变更
+
+- `instrumentationx` 默认依赖改为 Git + `rev`（对齐 workspace lock SHA），README 区分独立 clone 与工作区 patch 开发。
+
 ### 破坏性变更
 
 - MSRV 由 `1.71` 上调至 `1.77`：依赖链中的 `thiserror 2.0.21` 要求 rustc 1.77，
