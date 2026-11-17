@@ -6,13 +6,15 @@ AI Agent 的工作约定另见 [`AGENTS.md`](./AGENTS.md)；术语与领域语�
 ## 开发流程
 
 - 本仓库是**独立的单 crate 仓库**，不依赖 `xhyper.rs` 主工程及其内部 crate（`kernel` / `contracts` 等）。
-- 但它对共享契约 crate `instrumentationx` 有 `path` 依赖：
+- 但它对共享契约 crate `instrumentationx` 有依赖：合入 `main` 的 manifest 以 Git + `rev`
+  声明（`rev` 与 workspace `crates.lock.json` 对齐）：
 
   ```toml
-  instrumentationx = { version = "0.1.0", path = "../instrumentationx" }
+  instrumentationx = { version = "0.1.0", git = "https://github.com/bytechainx/instrumentationx.git", rev = "<SHA>" }
   ```
 
-  因此本地开发、门禁与打包都要把 `observex` 与 `instrumentationx` 两个仓库放在**同级目录**。
+  `instrumentationx` 不发布到 crates.io，本地并排开发时把 `observex` 与 `instrumentationx`
+  放在**同级目录**并用 `[patch.crates-io]` 指向本地 checkout（见 README「工作区并排开发」）。
 - substantial 变更走 feature branch → PR → review → merge，**禁止直接 push `main`**。
 - `main` 已启用分支保护：要求 PR + 必需检查 `fmt / clippy / test`，
   `required_approving_review_count = 0`（单人也能合并），禁止强推与删除。
@@ -49,14 +51,14 @@ cargo package --no-verify --allow-dirty --offline \
 - 文档与元数据中不得出现「可独立发布」「可直接 `cargo publish`」等表述，
   也不得放置 crates.io / docs.rs 徽章与外链。
 - `Cargo.toml` 的 `documentation` 指向 `https://github.com/bytechainx/observex#readme`。
-- 消费方引入方式（README「安装」小节为准）：因 `path` 内部依赖，需两个仓库同级 checkout 后以
-  `path` 形式引入：
+- 消费方引入方式（README「安装」小节为准）：以 Git 依赖引入，无需同级 checkout：
 
   ```toml
   [dependencies]
-  observex = { path = "../observex" }
-  instrumentationx = { path = "../instrumentationx" }
+  observex = { version = "0.1.2", git = "https://github.com/bytechainx/observex.git", rev = "<OBSERVEX_SHA>" }
   ```
+
+  仅本地并排开发才使用 `path` / `[patch.crates-io]` 形式。
 
 ## 开发约定
 
