@@ -8,9 +8,9 @@
 
 ## 技术栈
 
-- Rust edition 2021, rust-version 1.71
+- Rust edition 2021, rust-version 1.77
 - 关键依赖: `instrumentationx`（契约 trait）、`thiserror` 2、`tracing` 0.1；dev-dependencies: `tracing-subscriber`
-- `instrumentationx` 为 path 依赖（`../instrumentationx`），是不发布到 crates.io 的共享契约 crate
+- `instrumentationx` 合入 `main` 的 manifest 以 Git + `rev` 依赖声明（`rev` 与 workspace `crates.lock.json` 对齐）；path / `[patch]` 仅用于本地并排开发与 `cargo package` 覆盖；它是不发布到 crates.io 的共享契约 crate
 - 零业务耦合，不依赖 kernel/contracts 等私有 crate
 - crate 级 lint：`unwrap_used` / `expect_used` / `panic` / `unreachable` / `todo` / `unimplemented` 全部 `deny`（测试代码经 `cfg_attr(test)` 豁免）
 
@@ -19,7 +19,8 @@
 ```text
 src/
 ├── lib.rs      # TracingInstrumentation / PrefixedInstrumentation / CountingInstrumentation + 受控 re-export
-├── export.rs   # 有界进程内 sink：TelemetryExporter / InMemoryExporter / ExportingInstrumentation
+├── export.rs   # 有界进程内 sink：TelemetryExporter / ExportError / 诊断计数
+├── export/     # export.rs 的子模块：memory.rs（InMemoryExporter）/ forwarding.rs（ExportingInstrumentation）
 ├── ops.rs      # op 名清理：sanitize_op / truncate_op / join_op_segments / MAX_OP_BYTES
 ├── policy.rs   # 可观测性分层与「生产可用」断言策略（ObservabilityTier / policy_summary）
 └── surface.rs  # 本地验证探针（probe_tracing / probe_counting_*）

@@ -134,11 +134,12 @@ cargo package --no-verify --offline \
 
 ## 与 instrumentationx 的关系
 
-本 crate 实现 `instrumentationx::Instrumentation`，依赖以 `path` + `version` 声明。
-`instrumentationx` **不发布到 crates.io**（组织内各 crate 均不发布），因此：
+本 crate 实现 `instrumentationx::Instrumentation`，依赖以 Git + `rev` + `version`
+声明（见上文「安装」小节）。`instrumentationx` **不发布到 crates.io**（组织内各 crate
+均不发布），因此：
 
-- 本地开发：把两个仓库放在同级目录即可正常构建；
-- 消费方：同样需要两个仓库同级 checkout，并按上面的 `path` 形式引入；
+- 独立 clone / 消费方：按「安装」小节以 Git 依赖引入，无需同级 checkout；
+- 本地并排开发：两个仓库同级检出时可用 `[patch.crates-io]` 指向本地 `instrumentationx`；
 - `cargo package`：需要上面那条 `--config` 覆盖；该覆盖是长期约定，不随版本演进移除。
 
 ## 许可

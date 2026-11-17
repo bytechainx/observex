@@ -8,6 +8,13 @@
 
 ## [Unreleased]
 
+### 修正
+
+- 文档口径对齐 `main` 现状：`AGENTS.md` 的 MSRV 更正为 `1.77`、依赖模型更正为
+  Git + `rev`（path / `[patch]` 仅本地并排开发与 `cargo package` 覆盖），并补登
+  `src/export/` 子模块；`README.md` / `CONTRIBUTING.md` 同步修正依赖声明与消费方
+  引入方式的过时表述。
+
 ### 变更
 
 - `instrumentationx` 默认依赖改为 Git + `rev`（对齐 workspace lock SHA），README 区分独立 clone 与工作区 patch 开发。
