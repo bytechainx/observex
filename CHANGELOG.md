@@ -14,6 +14,8 @@
   Git + `rev`（path / `[patch]` 仅本地并排开发与 `cargo package` 覆盖），并补登
   `src/export/` 子模块；`README.md` / `CONTRIBUTING.md` 同步修正依赖声明与消费方
   引入方式的过时表述。
+- `CONTRIBUTING.md` 补登 GitLab `xhyperium/infra/observex` 远端（主平台、GitLab CI、
+  Maintainer 合并保护），GitHub 侧分支保护与 merge commit 约定保留并注明适用范围。
 
 ### 变更
 

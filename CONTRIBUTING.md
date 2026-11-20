@@ -15,13 +15,18 @@ AI Agent 的工作约定另见 [`AGENTS.md`](./AGENTS.md)；术语与领域语�
 
   `instrumentationx` 不发布到 crates.io，本地并排开发时把 `observex` 与 `instrumentationx`
   放在**同级目录**并用 `[patch.crates-io]` 指向本地 checkout（见 README「工作区并排开发」）。
-- substantial 变更走 feature branch → PR → review → merge，**禁止直接 push `main`**。
-- `main` 已启用分支保护：要求 PR + 必需检查 `fmt / clippy / test`，
+- 本仓库有两个远端：GitLab `xhyperium/infra/observex`（`origin`，主平台，
+  GitLab CI 跑 `gate` / `msrv` / `supply-chain`，`main` 保护为 Maintainer 合并、
+  merge commit、禁止强推）与 GitHub `bytechainx/observex`（公开消费源，
+  git 依赖指向它）。substantial 变更走 feature branch → MR/PR → review → merge，
+  **禁止直接 push `main`**。
+- GitHub 侧 `main` 已启用分支保护：要求 PR + 必需检查 `fmt / clippy / test`，
   `required_approving_review_count = 0`（单人也能合并），禁止强推与删除。
-- 合并方式固定为 **create a merge commit**。注意仓库设置是
+- GitHub 侧合并方式固定为 **create a merge commit**。注意仓库设置是
   `merge_commit_title = MERGE_MESSAGE` + `merge_commit_message = PR_TITLE`，因此
   `gh pr merge` 必须显式传 `--subject` 与 `--body`，否则会产出通用
-  `Merge pull request #N from …` 标题。
+  `Merge pull request #N from …` 标题；GitLab 侧 `merge_method=merge`，
+  合并即产生 merge commit。
 - 提交信息遵循 Conventional Commits（`feat:` / `fix:` / `docs:` / `ci:` / `chore:` / `refactor:`），
   描述用简体中文。
 
